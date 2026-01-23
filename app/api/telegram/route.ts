@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEnv } from '@/lib/env';
-import { getBotInstance } from '@/lib/telegram/bot';
+import { getBotInstance, initBot } from '@/lib/telegram/bot';
 import { connectDB } from '@/lib/db';
 
 /**
@@ -32,6 +32,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Asegurar conexión a DB
     await connectDB();
+
+    // Inicializar bot (primera vez)
+    await initBot();
 
     // Procesar update con el bot
     const bot = getBotInstance();

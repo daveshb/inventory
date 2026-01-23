@@ -13,6 +13,7 @@ import {
 } from './handlers';
 
 let botInstance: Bot | null = null;
+let botInitialized = false;
 
 /**
  * Obtiene o crea la instancia del bot
@@ -86,4 +87,22 @@ export function getBotInstance(): Bot {
 
   botInstance = bot;
   return bot;
+}
+/**
+ * Inicializa el bot (llama a init() para obtener botInfo)
+ */
+export async function initBot(): Promise<void> {
+  if (botInitialized) {
+    return;
+  }
+
+  const bot = getBotInstance();
+  try {
+    await bot.init();
+    botInitialized = true;
+    console.log('[BOT] Inicializado correctamente');
+  } catch (error) {
+    console.error('[BOT] Error al inicializar:', error);
+    throw error;
+  }
 }
