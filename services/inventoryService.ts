@@ -305,3 +305,68 @@ export async function listMovements(
     createdAt: m.createdAt,
   }));
 }
+
+/**
+ * Obtiene las ventas del día actual con resumen
+ */
+export async function getDailySales(): Promise<{
+  sales: Array<{
+    productName: string;
+    productBrand: string | null;
+    qty: number;
+    price: number | null;
+    subtotal: number;
+    createdAt: Date;
+  }>;
+  totalQuantity: number;
+  totalRevenue: number;
+}> {
+  await connectDB();
+
+  // Calcular inicio y fin del día actual
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Buscar ventas de hoy
+  const sales = (await Movement.find({
+    type: 'SALE',
+    createdAt: { $gte: today, $lt: tomorrow },
+  })
+    .populate('productId', 'name brand')
+    .sort({ createdAt: -1 })
+    .lean()) as unknown as Array<{
+    _id: string;
+    type: string;
+    productId?: { name: string; brand: string | null };
+    qty: number;
+    price?: number;
+    createdAt: Date;
+  }>;
+
+  let totalQuantity = 0;
+  let totalRevenue = 0;
+
+  const formattedSales = sales.map((s) => {
+    const subtotal = (s.price || 0) * s.qty;
+    totalQuantity += s.qty;
+    totalRevenue += subtotal;
+
+    return {
+      productName: s.productId?.name || 'Desconocido',
+      productBrand: s.productId?.brand || null,
+      qty: s.qty,
+      price: s.price || null,
+      subtotal,
+      createdAt: s.createdAt,
+    };
+  });
+
+  return {
+    sales: formattedSales,
+    totalQuantity,
+    totalRevenue,
+  };
+}

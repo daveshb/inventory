@@ -14,10 +14,15 @@ export function normalizeText(text: string): string {
 /**
  * Detecta intención del mensaje
  */
-export type Intent = 'INVENTORY' | 'SALE' | 'RESTOCK' | 'ADJUST' | 'UNKNOWN';
+export type Intent = 'INVENTORY' | 'SALE' | 'RESTOCK' | 'ADJUST' | 'DAILY_SALES' | 'UNKNOWN';
 
 export function detectIntent(text: string): Intent {
   const normalized = normalizeText(text);
+
+  // Ventas del día
+  if (/cuanto se vendio|cuanto vendi|ventas de hoy|venta de hoy|vendido hoy|sales today/i.test(normalized)) {
+    return 'DAILY_SALES';
+  }
 
   // Inventario
   if (/dame el inventario|inventario|stock|dame stock/i.test(normalized)) {

@@ -8,6 +8,7 @@ import {
   listMovements,
   searchProducts,
   getProductDetail,
+  getDailySales,
 } from '@/services/inventoryService';
 import {
   parseMessage,
@@ -384,6 +385,10 @@ export async function handleFreeText(ctx: Context): Promise<void> {
     const parsed = parseMessage(text);
 
     switch (parsed.intent) {
+      case 'DAILY_SALES':
+        await handleDailySales(ctx);
+        break;
+
       case 'INVENTORY':
         await handleInventario(ctx, text.includes('todo'));
         break;
@@ -476,5 +481,53 @@ export async function handleFreeText(ctx: Context): Promise<void> {
   } catch (error) {
     console.error('[TEXT]', error);
     await ctx.reply('❌ Error procesando el mensaje');
+  }
+}
+
+/**
+ * Manejador para ventas del día
+ */
+export async function handleDailySales(ctx: Context): Promise<void> {
+  try {
+    const dailySales = await getDailySales();
+
+    if (dailySales.sales.length === 0) {
+      await ctx.reply(
+        '📊 No hay ventas registradas hoy.\n\n¿Quieres registrar una? Escribe /vender'
+      );
+      return;
+    }
+
+    // Construir respuesta
+    let message = '📈 *Resumen de Ventas del Día*\n\n';
+
+    dailySales.sales.forEach((sale, i) => {
+      const time = sale.createdAt.toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      message += `${i + 1}. *${sale.productName}*`;
+      if (sale.productBrand) {
+        message += ` (${sale.productBrand})`;
+      }
+      message += `\n`;
+      message += `   📦 Qty: ${sale.qty}`;
+      if (sale.price) {
+        message += ` | 💵 ${sale.price.toLocaleString('es-CO')} c/u`;
+        message += ` | Total: $${sale.subtotal.toLocaleString('es-CO')}`;
+      }
+      message += `\n   🕐 ${time}\n\n`;
+    });
+
+    // Totales
+    message += `━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `📦 *Total Unidades*: ${dailySales.totalQuantity}\n`;
+    message += `💰 *Total Ventas*: $${dailySales.totalRevenue.toLocaleString('es-CO')}\n`;
+
+    await ctx.reply(message, { parse_mode: 'Markdown' });
+  } catch (error) {
+    console.error('[DAILY_SALES]', error);
+    await ctx.reply('❌ Error al obtener ventas del día');
   }
 }
