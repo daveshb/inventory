@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+import { Bot, Context } from 'grammy';
 import { getEnv } from '@/lib/env';
 import {
   handleStart,
@@ -10,10 +10,20 @@ import {
   handleMovimientos,
   handleAjustar,
   handleFreeText,
+  handleDailySales,
 } from './handlers';
 
 let botInstance: Bot | null = null;
 let botInitialized = false;
+
+function commandArgs(ctx: Context, command: string): string[] {
+  const text = ctx.message?.text || '';
+  return text
+    .slice(command.length + 1)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
 
 /**
  * Obtiene o crea la instancia del bot
@@ -54,30 +64,37 @@ export function getBotInstance(): Bot {
 
   bot.command('inventario', (ctx) => handleInventario(ctx, false));
   bot.command('inventario_todo', (ctx) => handleInventario(ctx, true));
+  bot.command('stock', (ctx) => handleInventario(ctx, false));
+  bot.command('stock_todo', (ctx) => handleInventario(ctx, true));
+  bot.command('ventas_hoy', handleDailySales);
 
   bot.command('agregar', (ctx) => {
-    const args = ctx.message?.text?.slice('/agregar'.length).trim().split(/\s+/);
-    handleAgregar(ctx, args || []);
+    handleAgregar(ctx, commandArgs(ctx, 'agregar'));
   });
+  bot.command('sumar', (ctx) => handleAgregar(ctx, commandArgs(ctx, 'sumar')));
+  bot.command('entrada', (ctx) => handleAgregar(ctx, commandArgs(ctx, 'entrada')));
 
   bot.command('vender', (ctx) => {
-    const args = ctx.message?.text?.slice('/vender'.length).trim().split(/\s+/);
-    handleVender(ctx, args || []);
+    handleVender(ctx, commandArgs(ctx, 'vender'));
   });
+  bot.command('venta', (ctx) => handleVender(ctx, commandArgs(ctx, 'venta')));
 
   bot.command('producto', (ctx) => {
     const args = ctx.message?.text?.slice('/producto'.length).trim();
     handleProducto(ctx, args ? [args] : []);
   });
-
-  bot.command('movimientos', (ctx) => {
-    const args = ctx.message?.text?.slice('/movimientos'.length).trim().split(/\s+/);
-    handleMovimientos(ctx, args || []);
+  bot.command('buscar', (ctx) => {
+    const args = ctx.message?.text?.slice('/buscar'.length).trim();
+    handleProducto(ctx, args ? [args] : []);
   });
 
+  bot.command('movimientos', (ctx) => {
+    handleMovimientos(ctx, commandArgs(ctx, 'movimientos'));
+  });
+  bot.command('historial', (ctx) => handleMovimientos(ctx, commandArgs(ctx, 'historial')));
+
   bot.command('ajustar', (ctx) => {
-    const args = ctx.message?.text?.slice('/ajustar'.length).trim().split(/\s+/);
-    handleAjustar(ctx, args || []);
+    handleAjustar(ctx, commandArgs(ctx, 'ajustar'));
   });
 
   /**

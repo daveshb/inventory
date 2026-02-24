@@ -152,7 +152,7 @@ export function parseMessage(rawText: string): ParsedMessage {
  * Valida que el producto y otros datos tengan sentido
  */
 const ParsedMessageSchema = z.object({
-  intent: z.enum(['INVENTORY', 'SALE', 'RESTOCK', 'ADJUST', 'UNKNOWN']),
+  intent: z.enum(['INVENTORY', 'SALE', 'RESTOCK', 'ADJUST', 'DAILY_SALES', 'UNKNOWN']),
   productName: z.string().min(1).nullable(),
   brand: z.string().nullable(),
   quantity: z.number().positive(),

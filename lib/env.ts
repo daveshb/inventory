@@ -12,6 +12,12 @@ const envSchema = z.object({
   ),
   APP_BASE_URL: z.string().url('URL base inválida').optional(),
   TELEGRAM_WEBHOOK_PATH: z.string().default('/api/telegram'),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().default('gpt-4.1-mini'),
+  AI_INTENT_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => (val ?? 'true').toLowerCase() === 'true'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 

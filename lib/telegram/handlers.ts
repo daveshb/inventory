@@ -15,6 +15,7 @@ import {
   normalizeText,
   extractProductName,
 } from '@/lib/parser';
+import { parseMessageWithAI } from '@/lib/aiIntent';
 import { ITelegramData } from '@/models/Movement';
 
 /**
@@ -62,12 +63,18 @@ export async function handleHelp(ctx: Context): Promise<void> {
 📊 *Inventario*
 /inventario - Muestra productos con stock > 0
 /inventario_todo - Muestra todos los productos (incluso sin stock)
+/stock - Alias rápido de /inventario
+/ventas_hoy - Resumen de ventas del día
 
 ➕ *Operaciones*
 /agregar <producto> [cantidad] [marca] - Agrega stock
+/sumar <producto> [cantidad] [marca] - Alias de /agregar
 /vender <producto> [cantidad] [precio] - Registra venta
+/venta <producto> [cantidad] [precio] - Alias de /vender
 /producto <nombre> - Muestra detalle del producto
+/buscar <nombre> - Alias de /producto
 /movimientos [n] - Últimos n movimientos (default 10)
+/historial [n] - Alias de /movimientos
 /ajustar <producto> <nuevo_stock> - Ajusta stock exacto
 
 📝 *Texto Libre*
@@ -76,6 +83,9 @@ También puedes escribir mensajes normales:
 • "vendí 2 cera nativo"
 • "dame el inventario"
 • "agrega 10 cera marca nativo"
+
+🤖 *IA Conversacional*
+Si configuras \`OPENAI_API_KEY\`, el bot interpreta mejor frases ambiguas y lenguaje natural.
 
 💡 **EJEMPLOS**
 /inventario
@@ -382,7 +392,19 @@ export async function handleFreeText(ctx: Context): Promise<void> {
   if (!text) return;
 
   try {
-    const parsed = parseMessage(text);
+    const localParsed = parseMessage(text);
+    const normalized = normalizeText(text);
+    const needsAiFallback =
+      localParsed.intent === 'UNKNOWN' ||
+      ((localParsed.intent === 'SALE' ||
+        localParsed.intent === 'RESTOCK' ||
+        localParsed.intent === 'ADJUST') &&
+        !localParsed.productName);
+
+    const parsed =
+      needsAiFallback || normalized.length > 18
+        ? (await parseMessageWithAI(text)) ?? localParsed
+        : localParsed;
 
     switch (parsed.intent) {
       case 'DAILY_SALES':
@@ -475,7 +497,13 @@ export async function handleFreeText(ctx: Context): Promise<void> {
 
       default:
         await ctx.reply(
-          `❓ No entiendo el comando. Escribe /help para ver opciones disponibles.`
+          `❓ No te entendí del todo. Prueba con algo como:
+• "vendí 2 cera marca nativo por 32000"
+• "agrega 5 shampoo"
+• "ajusta crema a 12"
+• "ventas de hoy"
+
+También puedes usar /help para ver todos los comandos.`
         );
     }
   } catch (error) {
