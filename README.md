@@ -74,6 +74,51 @@ npm run dev
 
 ---
 
+## 📱 Agregar un Segundo Teléfono / Usuario
+
+Sigue estos pasos para que otra persona o teléfono pueda usar este bot:
+
+### Paso 1 — Obtener el User ID del nuevo teléfono
+
+1. En el **nuevo teléfono**, abre Telegram y busca el bot (`@tu_bot_username`).
+2. Envía el comando `/mi_id`.
+3. El bot responderá con tu **User ID** (aunque no estés autorizado aún, este comando es público).
+   > Ejemplo de respuesta: `🔢 Tu User ID: 987654321`
+
+Si el bot no responde a `/mi_id`, usa `@userinfobot` como alternativa:
+1. Busca `@userinfobot` en Telegram.
+2. Envía `/start` y obtendrás tu ID.
+
+### Paso 2 — Agregar el User ID a la variable de entorno
+
+**En Vercel:**
+1. Ve al [Dashboard de Vercel](https://vercel.com/dashboard) → tu proyecto.
+2. *Settings* → *Environment Variables*.
+3. Edita `ALLOWED_USER_IDS` y agrega el nuevo ID separado por coma:
+   ```
+   1234567890,987654321
+   ```
+4. Guarda los cambios.
+
+**En local (`.env.local`):**
+```env
+ALLOWED_USER_IDS=1234567890,987654321
+```
+
+### Paso 3 — Redesplegar (solo Vercel)
+
+Después de actualizar la variable en Vercel, haz un nuevo deploy para que tome efecto:
+- Ve a *Deployments* → *Redeploy* (último deployment), o
+- Haz cualquier push al repositorio para desencadenar el deploy automático.
+
+### Paso 4 — Verificar acceso
+
+En el nuevo teléfono, envía `/start` al bot. Si ves el mensaje de bienvenida, ¡el acceso está habilitado!
+
+> **Nota de seguridad:** Cada User ID en `ALLOWED_USER_IDS` tiene acceso completo al inventario. Solo agrega usuarios de confianza.
+
+---
+
 ## 🌐 Deploy a Vercel
 
 1. Configurar variables en Vercel
@@ -94,6 +139,7 @@ curl -X POST https://tu-app.vercel.app/api/telegram/set-webhook
 |---------|-----|
 | `/start` | Bienvenida |
 | `/help` | Listar todos |
+| `/mi_id` | Muestra tu User ID de Telegram (sin autenticación) |
 | `/inventario` | Stock > 0 |
 | `/inventario_todo` | Todos |
 | `/agregar <producto> [qty] [marca]` | Agregar stock |

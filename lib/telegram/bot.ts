@@ -11,6 +11,7 @@ import {
   handleAjustar,
   handleFreeText,
   handleDailySales,
+  handleMiId,
 } from './handlers';
 
 let botInstance: Bot | null = null;
@@ -35,6 +36,12 @@ export function getBotInstance(): Bot {
 
   const env = getEnv();
   const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
+
+  /**
+   * Comando /mi_id - accesible sin autenticación para que nuevos usuarios
+   * puedan obtener su User ID antes de ser autorizados.
+   */
+  bot.command('mi_id', handleMiId);
 
   /**
    * Middleware: Validar que el usuario esté en whitelist
