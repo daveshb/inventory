@@ -30,6 +30,25 @@ function getTelegramData(ctx: Context): ITelegramData {
 }
 
 /**
+ * Comando /mi_id - Muestra el userId de Telegram del remitente
+ */
+export async function handleMiId(ctx: Context): Promise<void> {
+  const userId = ctx.from?.id;
+  const username = ctx.from?.username ? `@${ctx.from.username}` : '(sin username)';
+  const firstName = ctx.from?.first_name || '(sin nombre)';
+
+  const message = `🆔 *Tu información de Telegram*
+
+👤 Nombre: ${firstName}
+🔖 Username: ${username}
+🔢 Tu User ID: \`${userId}\`
+
+Para autorizar este teléfono en el bot, el administrador debe agregar tu User ID (\`${userId}\`) a la variable de entorno \`ALLOWED_USER_IDS\`.`;
+
+  await ctx.reply(message, { parse_mode: 'Markdown' });
+}
+
+/**
  * Comando /start
  */
 export async function handleStart(ctx: Context): Promise<void> {
@@ -59,6 +78,7 @@ export async function handleHelp(ctx: Context): Promise<void> {
 📋 *Información*
 /start - Mensaje de bienvenida
 /help - Muestra esta ayuda
+/mi_id - Muestra tu User ID de Telegram
 
 📊 *Inventario*
 /inventario - Muestra productos con stock > 0
